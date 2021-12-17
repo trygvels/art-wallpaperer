@@ -18,7 +18,21 @@ def resize_canvas(im_old_path, w_new=2880, h_new=1800,):
     print(fname.encode("utf-8"))
     
     im = Image.open(im_old_path)
+                
     w_old, h_old = im.size
+
+    if im_old_path.endswith(".png"): # Remove transparent part
+        datas = im.getdata()
+
+        newData = []
+        for item in datas:
+            if item[0] == 255 and item[1] == 255 and item[2] == 255:
+                newData.append((255, 255, 255, 0)) # This is for checking white pixels, replace transparent. Do
+                # if item[3] == 0 to check for transparent pixels.
+            else:
+                newData.append(item)
+
+        im.putdata(newData)
 
     scaling = math.sqrt((w_new*h_new)/(5.0*w_old*h_old)) # Scaling so image takes 1/2 of area
     w_old = int(w_old*scaling)
@@ -47,18 +61,21 @@ def resize_canvas(im_old_path, w_new=2880, h_new=1800,):
         h_text = h_text2
     draw.text( ((w_new-w_text)//2, h_old//2 + h_new//2 + h_text), title, fill=(0,0,0), font=font)
     draw.text( ((w_new-w_text2)//2, h_old//2 + h_new//2 + 2*h_text) , artist, fill=(0,0,0), font=font)
-    im_new.save(fname+"_formatted."+ftype)
+    im_new.save("formatted/"+fname+"_formatted."+ftype)
 
-#if not os.path.exists('formatted'):
-#    os.makedirs('formatted')
+if not os.path.exists('formatted'):
+    os.makedirs('formatted')
     
 for fname in os.listdir('.'):
-    if fname.endswith('.jpg') or fname.endswith('.jpeg'):
-        if fname.endswith('_formatted.jpg'):
+    if fname.endswith('.jpg') or fname.endswith('.jpeg') or fname.endswith('.png'):
+        if "formatted" in fname:
             continue
         #print(fname)
         try:
             resize_canvas(fname)
         except ValueError as err:
             print(err)
+    else:
+        print(f"WARNING: {fname} did not fit filetype.")
+            
         
